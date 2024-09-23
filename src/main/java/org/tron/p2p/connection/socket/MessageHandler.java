@@ -13,6 +13,7 @@ import org.tron.p2p.connection.message.detect.StatusMessage;
 import org.tron.p2p.exception.P2pException;
 import org.tron.p2p.protos.Connect.DisconnectReason;
 import org.tron.p2p.utils.ByteArray;
+import org.web3j.crypto.Hash;
 
 @Slf4j(topic = "net")
 public class MessageHandler extends ByteToMessageDecoder {
@@ -47,6 +48,8 @@ public class MessageHandler extends ByteToMessageDecoder {
     try {
       if (channel.isFinishHandshake()) {
         data = UpgradeController.decodeReceiveData(channel.getVersion(), data);
+        String recDataHash = ByteArray.toHexString(Hash.sha3(data));
+        log.info("receive from :" + ctx.channel().remoteAddress() + " dataHash: " + recDataHash + " type: " + data[0]);
       }
       ChannelManager.processMessage(channel, data);
     } catch (Exception e) {
