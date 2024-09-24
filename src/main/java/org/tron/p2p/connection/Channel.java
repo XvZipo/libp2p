@@ -1,6 +1,8 @@
 package org.tron.p2p.connection;
 
 import com.google.common.base.Throwables;
+import com.google.common.hash.HashCode;
+import com.google.protobuf.ByteString;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.tron.p2p.base.Parameter;
 import org.tron.p2p.connection.business.upgrade.UpgradeController;
@@ -30,6 +33,7 @@ import org.tron.p2p.discover.Node;
 import org.tron.p2p.exception.P2pException;
 import org.tron.p2p.stats.TrafficStats;
 import org.tron.p2p.utils.ByteArray;
+import org.web3j.crypto.Hash;
 
 @Slf4j(topic = "net")
 public class Channel {
@@ -147,13 +151,15 @@ public class Channel {
   public void send(byte[] data) {
     try {
       byte type = data[0];
+      String srcDataHash = ByteArray.toHexString(Hash.sha3(data));
+      log.info("send to :" + ctx.channel().remoteAddress() + " dataHash: " + srcDataHash + " type: " + type);
       if (isDisconnect) {
         log.warn("Send to {} failed as channel has closed, message-type:{} ",
             ctx.channel().remoteAddress(), type);
         return;
       }
-
       if (finishHandshake) {
+
         data = UpgradeController.codeSendData(version, data);
       }
 
